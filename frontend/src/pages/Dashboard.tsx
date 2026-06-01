@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Plus, CircleCheck, CircleAlert, Loader2, Clock, Download, Upload, Package, FileDown, Sparkles } from 'lucide-react'
@@ -6,7 +6,7 @@ import { listMigrations, downloadURL, type Migration } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import AppHeader from '@/components/AppHeader'
 import { useMe } from '@/hooks/useMe'
-import { startTour } from '@/lib/tour'
+import { startTourFromBeginning } from '@/lib/tour'
 
 const STATUS_META: Record<Migration['Status'], { label: string; color: string; icon: React.ReactNode }> = {
   queued:  { label: 'Na fila',     color: 'text-muted-foreground', icon: <Clock className="size-4" /> },
@@ -17,7 +17,6 @@ const STATUS_META: Record<Migration['Status'], { label: string; color: string; i
 
 export default function Dashboard() {
   const me = useMe()
-  const navigate = useNavigate()
   const { data: rows = [], refetch } = useQuery({
     queryKey: ['migrations'],
     queryFn: listMigrations,
@@ -42,9 +41,7 @@ export default function Dashboard() {
         <h1 className="mb-6 font-display text-2xl font-bold">Suas migrações</h1>
         {rows.length === 0 ? (
           <EmptyState
-            onStartTour={() =>
-              me && startTour({ navigate: (p) => navigate(p), includeAdmin: !!me.is_super_admin })
-            }
+            onStartTour={() => me && startTourFromBeginning({ includeAdmin: !!me.is_super_admin })}
           />
         ) : (
           <ul className="space-y-3">

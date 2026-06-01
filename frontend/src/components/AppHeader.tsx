@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { LogOut, Plus, Shield, HelpCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useMe } from '@/hooks/useMe'
-import { startTour } from '@/lib/tour'
+import { startTourFromBeginning } from '@/lib/tour'
 
 interface Props {
   /** Show the "Nova migração" + sign-out controls (true on authenticated pages). */
@@ -43,7 +43,7 @@ export default function AppHeader({ showAppNav = false }: Props) {
               <Plus className="size-4" /> Nova migração
             </Link>
             <button
-              onClick={() => me && startTour({ navigate: (p) => navigate(p), includeAdmin: !!me.is_super_admin })}
+              onClick={() => me && startTourFromBeginning({ includeAdmin: !!me.is_super_admin })}
               className="rounded-md border border-border bg-card p-2.5 text-muted-foreground transition hover:border-skip-glow hover:text-foreground"
               aria-label="Refazer tour"
               title="Refazer tour guiado"
