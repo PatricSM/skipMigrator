@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+dev-dist/
+build/
+*.tsbuildinfo
+
+# Go binaries
+/server
+/migrate-cli
+*.exe
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+
+# os
+Thumbs.db
+
+# misc
+*.bak-*
+*.tmp
+.eslintcache
+.oxlintcache

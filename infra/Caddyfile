@@ -1,0 +1,23 @@
+# Caddy reverse proxy for skip-migrator.
+# Set SKIP_MIGRATOR_DOMAIN in the docker-compose env to your domain (e.g. skip-migrator.app).
+{$SKIP_MIGRATOR_DOMAIN} {
+    encode gzip zstd
+
+    # API
+    handle_path /api/* {
+        reverse_proxy api:8000
+    }
+    handle /healthz {
+        reverse_proxy api:8000
+    }
+
+    # Static frontend (served from a separate container or CDN; placeholder)
+    handle {
+        respond "skip-migrator: configure the frontend container" 200
+    }
+
+    log {
+        output stdout
+        format console
+    }
+}

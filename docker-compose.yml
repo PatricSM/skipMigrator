@@ -1,0 +1,48 @@
+# Local development stack for skip-migrator.
+# - api: the Go backend + worker pool.
+# - caddy: reverse proxy (optional for local; gives TLS in prod).
+#
+# Supabase (Postgres + Auth + Storage) is consumed as a managed service.
+# Set the SUPABASE_* and DATABASE_URL env vars in .env before bringing it up.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: skip-migrator-api:dev
+    environment:
+      PORT: "8000"
+      DATABASE_URL: "${DATABASE_URL}"
+      SUPABASE_URL: "${SUPABASE_URL}"
+      SUPABASE_SERVICE_ROLE_KEY: "${SUPABASE_SERVICE_ROLE_KEY}"
+      SUPABASE_JWK_URL: "${SUPABASE_JWK_URL:-}"
+      SUPABASE_PROJECT_REF: "${SUPABASE_PROJECT_REF:-}"
+      WORKER_CONCURRENCY: "${WORKER_CONCURRENCY:-2}"
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Optional reverse proxy with automatic TLS via Let's Encrypt.
+  # Uncomment for production deploy on a VPS with a public domain.
+  # caddy:
+  #   image: caddy:2
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+  #     - caddy_data:/data
+  #     - caddy_config:/config
+  #   depends_on:
+  #     - api
+
+# volumes:
+#   caddy_data:
+#   caddy_config:
