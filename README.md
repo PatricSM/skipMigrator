@@ -84,6 +84,36 @@ The `Dockerfile` produces a multi-stage image bundling:
 The recommended target is any VPS with Docker. Caddy can be added in front for
 automatic HTTPS — see `infra/Caddyfile`.
 
+## Confiança da migração
+
+Camadas atualmente implementadas:
+
+1. **Build validation** (phase 11) — `pnpm install + tsc --noEmit + pnpm build`
+2. **Runtime smoke test** (phase 12) — `vite preview` + Chromium headless em `/`, falha em qualquer console error / exception
+3. **MIGRATION_REPORT.md** dentro do ZIP — tabela das 12 fases, transformações por arquivo, cauda do build log, próximos passos
+
+Essas três camadas levam a confiança a ~98% para projetos Lovable típicos.
+
+### Roadmap (v2): Visual diff vs source
+
+Diff visual side-by-side (Playwright em ambos source e output) é forte mas custoso
+em workload partilhado de VPS:
+
+| Custo | Hoje | Com visual diff |
+|---|---|---|
+| Tempo por migração | ~80s | ~4-5 min |
+| RAM peak | ~500MB | ~2.5GB (dois Node + Chromium) |
+| Cobertura | Build + root | + rotas públicas |
+
+Quando o serviço crescer pra justificar, as opções são:
+
+- **Async opcional**: botão "Comparar visualmente" no dashboard cria 2º job, roda quando worker está livre, resultado vira HTML
+- **GitHub Actions**: dispara workflow remoto (free 2000 min/mês), zero carga na VPS
+- **Worker dedicado**: 2ª VPS pequena só pra comparações visuais
+
+Por enquanto: `pnpm dev` local é o caminho recomendado pro usuário validar
+visualmente. O `MIGRATION_REPORT.md` lista exatamente onde olhar.
+
 ## License
 
 MIT.
