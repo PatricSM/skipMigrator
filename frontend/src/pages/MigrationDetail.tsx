@@ -5,6 +5,7 @@ import { ArrowLeft, Download, Loader2, CircleCheck, CircleAlert, Clock } from 'l
 import { getMigration, downloadURL, type Migration } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import SupabaseChecklist from '@/components/SupabaseChecklist'
+import AppHeader from '@/components/AppHeader'
 
 const META: Record<Migration['Status'], { label: string; color: string; icon: React.ReactNode }> = {
   queued:  { label: 'Na fila — aguardando um worker',      color: 'text-muted-foreground', icon: <Clock className="size-5" /> },
@@ -40,17 +41,12 @@ export default function MigrationDetail() {
 
   return (
     <div className="min-h-screen">
-      <header className="container flex items-center justify-between py-6">
-        <Link to="/app" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+      <AppHeader showAppNav />
+      <main className="container max-w-3xl py-8">
+        <Link to="/app" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" /> Painel
         </Link>
-        <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl" />
-          Skip Migrator
-        </Link>
-      </header>
 
-      <main className="container max-w-3xl py-8">
         <div className={`mb-6 flex items-center gap-4 rounded-lg border border-border bg-card p-6 ${meta.color}`}>
           {meta.icon}
           <div className="flex-1">

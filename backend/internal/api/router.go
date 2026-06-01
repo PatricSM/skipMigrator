@@ -14,10 +14,13 @@ import (
 
 // Deps holds the dependencies handlers need.
 type Deps struct {
-	Pool           *pgxpool.Pool
-	Storage        *storage.SupabaseStorage
-	SupabaseJWKURL string // e.g. https://<ref>.supabase.co/auth/v1/.well-known/jwks.json
-	SupabaseAud    string // project ref (audience claim)
+	Pool               *pgxpool.Pool
+	Storage            *storage.SupabaseStorage
+	SupabaseURL        string
+	SupabaseServiceKey string
+	SupabaseJWKURL     string // e.g. https://<ref>.supabase.co/auth/v1/.well-known/jwks.json
+	SupabaseAud        string // project ref (audience claim)
+	SuperAdminEmails   []string
 }
 
 // NewRouter builds the chi router with all middleware + routes wired.
@@ -46,10 +49,19 @@ func NewRouter(deps Deps) http.Handler {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(authMiddleware(deps))
+		r.Get("/me", h.me)
 		r.Post("/migrations", h.createMigration)
 		r.Get("/migrations", h.listMigrations)
 		r.Get("/migrations/{id}", h.getMigration)
 		r.Get("/migrations/{id}/download", h.downloadOutput)
+
+		// Super-admin only
+		r.Group(func(r chi.Router) {
+			r.Use(requireSuperAdmin)
+			r.Get("/admin/users", h.adminListUsers)
+			r.Post("/admin/users", h.adminCreateUser)
+			r.Delete("/admin/users/{id}", h.adminDeleteUser)
+		})
 	})
 
 	return r

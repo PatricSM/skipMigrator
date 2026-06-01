@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -45,10 +46,13 @@ func main() {
 
 	// HTTP server
 	mux := api.NewRouter(api.Deps{
-		Pool:           pool,
-		Storage:        store,
-		SupabaseJWKURL: cfg.SupabaseJWKURL,
-		SupabaseAud:    cfg.SupabaseProjectRef,
+		Pool:               pool,
+		Storage:            store,
+		SupabaseURL:        cfg.SupabaseURL,
+		SupabaseServiceKey: cfg.SupabaseServiceKey,
+		SupabaseJWKURL:     cfg.SupabaseJWKURL,
+		SupabaseAud:        cfg.SupabaseProjectRef,
+		SuperAdminEmails:   cfg.SuperAdminEmails,
 	})
 
 	srv := &http.Server{
@@ -83,6 +87,7 @@ type config struct {
 	SupabaseJWKURL     string
 	SupabaseProjectRef string
 	WorkerConcurrency  int
+	SuperAdminEmails   []string
 }
 
 func loadConfig() config {
@@ -98,6 +103,13 @@ func loadConfig() config {
 		c.WorkerConcurrency = n
 	} else {
 		c.WorkerConcurrency = 2
+	}
+	if raw := strings.TrimSpace(os.Getenv("SUPER_ADMIN_EMAILS")); raw != "" {
+		for _, e := range strings.Split(raw, ",") {
+			if e = strings.TrimSpace(strings.ToLower(e)); e != "" {
+				c.SuperAdminEmails = append(c.SuperAdminEmails, e)
+			}
+		}
 	}
 	if c.DatabaseURL == "" {
 		log.Fatal("DATABASE_URL is required")

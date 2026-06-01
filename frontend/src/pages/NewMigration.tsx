@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ArrowLeft, Upload, Loader2 } from 'lucide-react'
 import { createMigration } from '@/lib/api'
+import AppHeader from '@/components/AppHeader'
 
 export default function NewMigration() {
   const [file, setFile] = useState<File | null>(null)
@@ -28,17 +29,11 @@ export default function NewMigration() {
 
   return (
     <div className="min-h-screen">
-      <header className="container flex items-center justify-between py-6">
-        <Link to="/app" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+      <AppHeader showAppNav />
+      <main className="container max-w-2xl py-8">
+        <Link to="/app" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" /> Voltar para o painel
         </Link>
-        <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl" />
-          Skip Migrator
-        </Link>
-      </header>
-
-      <main className="container max-w-2xl py-8">
         <h1 className="mb-1 font-display text-2xl font-bold">Nova migração</h1>
         <p className="mb-8 text-sm text-muted-foreground">
           Envie o ZIP do seu projeto Lovable. Máximo de 100 MB. Garanta que <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">node_modules</code> e <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">dist</code> estão excluídos.

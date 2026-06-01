@@ -1,9 +1,10 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { Plus, LogOut, CircleCheck, CircleAlert, Loader2, Clock, Download } from 'lucide-react'
+import { Plus, CircleCheck, CircleAlert, Loader2, Clock, Download } from 'lucide-react'
 import { listMigrations, downloadURL, type Migration } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
+import AppHeader from '@/components/AppHeader'
 
 const STATUS_META: Record<Migration['Status'], { label: string; color: string; icon: React.ReactNode }> = {
   queued:  { label: 'Na fila',     color: 'text-muted-foreground', icon: <Clock className="size-4" /> },
@@ -13,7 +14,6 @@ const STATUS_META: Record<Migration['Status'], { label: string; color: string; i
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate()
   const { data: rows = [], refetch } = useQuery({
     queryKey: ['migrations'],
     queryFn: listMigrations,
@@ -33,28 +33,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen">
-      <header className="container flex items-center justify-between py-6">
-        <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl" />
-          Skip Migrator
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link
-            to="/app/new"
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
-          >
-            <Plus className="size-4" /> Nova migração
-          </Link>
-          <button
-            onClick={async () => { await supabase.auth.signOut(); navigate('/') }}
-            className="rounded-md border border-border bg-card p-2.5 text-muted-foreground transition hover:border-skip-glow hover:text-foreground"
-            aria-label="Sair"
-          >
-            <LogOut className="size-4" />
-          </button>
-        </div>
-      </header>
-
+      <AppHeader showAppNav />
       <main className="container py-8">
         <h1 className="mb-6 font-display text-2xl font-bold">Suas migrações</h1>
         {rows.length === 0 ? (
