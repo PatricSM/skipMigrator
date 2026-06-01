@@ -107,6 +107,12 @@ func Run(opts Options) (*Result, error) {
 			return result, fmt.Errorf("%s failed: %w", log.Phase, err)
 		}
 
+		// Auto-format with Skip's canonical formatter (oxfmt) so phase 13's
+		// oxfmt --check passes naturally on Lovable-imported code.
+		formatLog, _ := phase11bAutoFormat(opts)
+		result.PhaseLogs = append(result.PhaseLogs, formatLog)
+		opts.LogFn("[%s] %s — %s", formatLog.Phase, formatLog.Status, formatLog.Message)
+
 		// Runtime smoke test layered on top of the build check.
 		smokeLog, smokeErr := phase12Smoke(opts)
 		result.PhaseLogs = append(result.PhaseLogs, smokeLog)
@@ -115,6 +121,11 @@ func Run(opts Options) (*Result, error) {
 			writeReport(opts, result, smokeErr)
 			return result, fmt.Errorf("%s failed: %w", smokeLog.Phase, smokeErr)
 		}
+
+		// Skip-readiness check (warn-only: doesn't abort the migration).
+		readinessLog, _ := phase13SkipReadiness(opts)
+		result.PhaseLogs = append(result.PhaseLogs, readinessLog)
+		opts.LogFn("[%s] %s — %s", readinessLog.Phase, readinessLog.Status, readinessLog.Message)
 	}
 
 	if err := writeReport(opts, result, nil); err != nil {
