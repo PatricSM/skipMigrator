@@ -1,8 +1,10 @@
 import { type Page, expect } from '@playwright/test'
 
+// `||` (not `??`) handles the case where GitHub Actions injects an empty
+// string for an unset secret. `??` only falls back on null/undefined.
 export const SUPER_ADMIN = {
-  email: process.env.E2E_SUPER_EMAIL ?? 'super@skip.dev',
-  password: process.env.E2E_SUPER_PASSWORD ?? 'GoSkip@123',
+  email: process.env.E2E_SUPER_EMAIL || 'super@skip.dev',
+  password: process.env.E2E_SUPER_PASSWORD || 'GoSkip@123',
 }
 
 /**
