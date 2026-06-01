@@ -60,6 +60,7 @@ export default function AdminUsers() {
         {/* Create form */}
         <form
           onSubmit={(e) => { e.preventDefault(); createMut.mutate() }}
+          data-tour="create-user-form"
           className="mb-6 grid gap-3 rounded-lg border border-border bg-card p-6 md:grid-cols-[2fr_1fr_auto]"
         >
           <div>

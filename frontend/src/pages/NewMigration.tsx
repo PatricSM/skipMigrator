@@ -42,7 +42,10 @@ export default function NewMigration() {
         <form onSubmit={submit} className="space-y-6 rounded-lg border border-border bg-card p-6">
           <label className="block">
             <span className="mb-2 block text-sm font-semibold">Arquivo ZIP do projeto</span>
-            <div className="relative grid place-items-center rounded-md border-2 border-dashed border-border bg-input p-12 transition hover:border-skip-glow hover:bg-secondary/50">
+            <div
+              data-tour="upload-zone"
+              className="relative grid place-items-center rounded-md border-2 border-dashed border-border bg-input p-12 transition hover:border-skip-glow hover:bg-secondary/50"
+            >
               <input
                 type="file"
                 accept=".zip,application/zip"
@@ -63,7 +66,7 @@ export default function NewMigration() {
           </label>
 
           <div className="space-y-3">
-            <label className="flex items-start gap-3 rounded-md border border-border bg-input p-4">
+            <label data-tour="validate-option" className="flex items-start gap-3 rounded-md border border-border bg-input p-4">
               <input type="checkbox" checked={validate} onChange={(e) => setValidate(e.target.checked)} className="mt-1 size-4 accent-primary" />
               <div>
                 <div className="font-semibold">Validar build</div>
@@ -73,7 +76,7 @@ export default function NewMigration() {
               </div>
             </label>
 
-            <label className="flex items-start gap-3 rounded-md border border-border bg-input p-4">
+            <label data-tour="pixel-perfect-option" className="flex items-start gap-3 rounded-md border border-border bg-input p-4">
               <input type="checkbox" checked={pixelPerfect} onChange={(e) => setPixelPerfect(e.target.checked)} className="mt-1 size-4 accent-primary" />
               <div>
                 <div className="font-semibold">Pixel-perfect</div>
@@ -86,6 +89,7 @@ export default function NewMigration() {
 
           <button
             type="submit"
+            data-tour="submit-btn"
             disabled={busy || !file}
             className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-3.5 font-semibold text-primary-foreground shadow-glow transition hover:opacity-95 disabled:opacity-50"
           >

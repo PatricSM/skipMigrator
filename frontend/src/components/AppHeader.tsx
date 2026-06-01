@@ -1,7 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { LogOut, Plus, Shield } from 'lucide-react'
+import { LogOut, Plus, Shield, HelpCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useMe } from '@/hooks/useMe'
+import { startTour } from '@/lib/tour'
 
 interface Props {
   /** Show the "Nova migração" + sign-out controls (true on authenticated pages). */
@@ -28,6 +29,7 @@ export default function AppHeader({ showAppNav = false }: Props) {
             {me?.is_super_admin && (
               <Link
                 to="/admin/users"
+                data-tour="admin-link"
                 className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:border-skip-glow"
               >
                 <Shield className="size-4" /> Admin
@@ -35,10 +37,19 @@ export default function AppHeader({ showAppNav = false }: Props) {
             )}
             <Link
               to="/app/new"
+              data-tour="new-migration-btn"
               className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
             >
               <Plus className="size-4" /> Nova migração
             </Link>
+            <button
+              onClick={() => me && startTour({ navigate: (p) => navigate(p), includeAdmin: !!me.is_super_admin })}
+              className="rounded-md border border-border bg-card p-2.5 text-muted-foreground transition hover:border-skip-glow hover:text-foreground"
+              aria-label="Refazer tour"
+              title="Refazer tour guiado"
+            >
+              <HelpCircle className="size-4" />
+            </button>
             <button
               onClick={async () => { await supabase.auth.signOut(); navigate('/') }}
               className="rounded-md border border-border bg-card p-2.5 text-muted-foreground transition hover:border-skip-glow hover:text-foreground"

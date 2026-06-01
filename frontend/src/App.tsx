@@ -8,9 +8,11 @@ import Dashboard from './pages/Dashboard'
 import NewMigration from './pages/NewMigration'
 import MigrationDetail from './pages/MigrationDetail'
 import AdminUsers from './pages/AdminUsers'
+import { useAutoTour } from './hooks/useAutoTour'
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
+  useAutoTour()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
