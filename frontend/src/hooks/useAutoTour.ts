@@ -10,13 +10,15 @@ import {
 } from '@/lib/tour'
 import { useMe } from './useMe'
 
+type Stage = 'dashboard' | 'new-migration' | 'admin-users' | 'finale'
+
 /**
  * Drives the multi-stage guided tour. Decides what to start based on:
  *   - current route
  *   - sessionStorage stage flag (set by the previous stage)
  *   - is_super_admin from /api/me
  *
- * Mount once at the App root. Idempotent within a session (per stage).
+ * Mount once at the App root.
  */
 export function useAutoTour() {
   const me = useMe()
@@ -24,28 +26,16 @@ export function useAutoTour() {
   const fired = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!me) return // not loaded yet or signed out
+    if (!me) return
     const path = location.pathname
-
-    // Decide which stage (if any) belongs to this route
-    let toRun: 'dashboard' | 'new-migration' | 'admin-users' | 'finale' | null = null
-
     const via = (() => { try { return sessionStorage.getItem('skipmigrator.tour.via') } catch { return null } })()
 
+    let toRun: Stage | null = null
     if (path === '/app') {
-      // First-time login → start at the beginning
       if (!hasSeenTour() && getNextStage() === null) toRun = 'dashboard'
-      // Closing handoff from the new-migration stage when user is NOT admin
       else if (getNextStage() === 'finale') toRun = 'finale'
-    } else if (path === '/app/new') {
-      // We only auto-start the new-migration stage when we arrived via the
-      // dashboard handoff. getNextStage() at this point already points to the
-      // stage AFTER new-migration ("admin-users" or "finale"), so we look at
-      // the `via` flag instead.
-      if (via === 'dashboard-next') {
-        toRun = 'new-migration'
-        sessionStorage.removeItem('skipmigrator.tour.via')
-      }
+    } else if (path === '/app/new' && via === 'dashboard-next') {
+      toRun = 'new-migration'
     } else if (path === '/admin/users' && getNextStage() === 'admin-users') {
       toRun = 'admin-users'
     }
@@ -56,14 +46,47 @@ export function useAutoTour() {
     if (fired.current === key) return
     fired.current = key
 
-    const t = setTimeout(() => {
+    // Wait until the anchor element actually exists in the DOM before launching.
+    // Better than a flat setTimeout — avoids races where the page is still
+    // hydrating when we try to anchor the popover.
+    const anchor = anchorFor(toRun)
+    const launch = () => {
+      if (toRun === 'new-migration') sessionStorage.removeItem('skipmigrator.tour.via')
       switch (toRun) {
         case 'dashboard':       startDashboardTour({ includeAdmin: me.is_super_admin }); break
         case 'new-migration':   startNewMigrationTour({ includeAdmin: me.is_super_admin }); break
         case 'admin-users':     startAdminTour(); break
         case 'finale':          startFinaleTour(); break
       }
-    }, 500) // give the page a chance to paint anchor targets
-    return () => clearTimeout(t)
+    }
+    if (!anchor) {
+      // No specific anchor (welcome modal) — just give the page a tick to paint.
+      const t = setTimeout(launch, 300)
+      return () => clearTimeout(t)
+    }
+    waitForAnchor(anchor, 4000).then((found) => {
+      if (found) launch()
+    })
   }, [me, location.pathname])
+}
+
+function anchorFor(stage: Stage): string | null {
+  switch (stage) {
+    case 'dashboard':       return '[data-tour="dashboard-main"]'
+    case 'new-migration':   return '[data-tour="upload-zone"]'
+    case 'admin-users':     return '[data-tour="create-user-form"]'
+    case 'finale':          return null
+  }
+}
+
+async function waitForAnchor(selector: string, timeoutMs: number): Promise<boolean> {
+  const start = Date.now()
+  return new Promise((resolve) => {
+    const tick = () => {
+      if (document.querySelector(selector)) return resolve(true)
+      if (Date.now() - start > timeoutMs) return resolve(false)
+      requestAnimationFrame(tick)
+    }
+    tick()
+  })
 }
