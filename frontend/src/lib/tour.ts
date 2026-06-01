@@ -93,7 +93,7 @@ export function startDashboardTour(opts: { includeAdmin: boolean }): Driver {
         // chain a /app/new visit first — that page has its own stage tour
         sessionStorage.setItem('skipmigrator.tour.via', 'dashboard-next')
         popoverOpts.driver.destroy()
-        window.location.href = '/app/new'
+        setTimeout(() => { window.location.href = '/app/new' }, 50)
       },
     },
   ]
@@ -147,7 +147,8 @@ export function startNewMigrationTour(opts: { includeAdmin: boolean }): Driver {
         advancedToNext = true
         setNextStage(opts.includeAdmin ? 'admin-users' : 'finale')
         popoverOpts.driver.destroy()
-        window.location.href = opts.includeAdmin ? '/admin/users' : '/app'
+        const target = opts.includeAdmin ? '/admin/users' : '/app'
+        setTimeout(() => { window.location.href = target }, 50)
       },
     },
   ]
@@ -174,7 +175,7 @@ export function startAdminTour(): Driver {
         advancedToNext = true
         setNextStage('finale')
         popoverOpts.driver.destroy()
-        window.location.href = '/app'
+        setTimeout(() => { window.location.href = '/app' }, 50)
       },
     },
   ]
