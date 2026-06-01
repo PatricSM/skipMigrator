@@ -8,10 +8,14 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // NewPool opens a pgxpool against databaseURL with sensible defaults.
+// Uses simple-protocol query mode so the pool is compatible with Supabase's
+// transaction pooler (port 6543), which doesn't support session-level prepared
+// statements.
 func NewPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 	cfg, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
@@ -20,6 +24,8 @@ func NewPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 	cfg.MaxConns = 20
 	cfg.MinConns = 2
 	cfg.MaxConnLifetime = 30 * time.Minute
+	// Required for PgBouncer transaction pooling — see https://github.com/jackc/pgx/issues/1847
+	cfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		return nil, err
