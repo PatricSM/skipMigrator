@@ -4,22 +4,13 @@ interface Props {
   projectRef: string
 }
 
-/**
- * Renderiza o checklist pós-migração contextualizado pro projeto Supabase
- * do cliente. Mostrado após o ZIP de saída ficar pronto.
- *
- * Premissa: o cliente vai conectar a app migrada no MESMO projeto Supabase
- * que o Lovable já usava (schema, RLS, edge functions já estão lá).
- * Logo, na maior parte dos casos é plug-and-play. As exceções aparecem só
- * se ele trocar o domínio público.
- */
 export default function SupabaseChecklist({ projectRef }: Props) {
   const base = `https://supabase.com/dashboard/project/${projectRef}`
 
   return (
-    <section className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-soft">
+    <section className="mt-6 rounded-lg border border-border bg-card p-6">
       <div className="mb-4 flex items-center gap-3">
-        <div className="grid size-10 place-items-center rounded-xl bg-accent text-primary">
+        <div className="grid size-10 place-items-center rounded-md bg-primary/15 text-primary">
           <Database className="size-5" />
         </div>
         <div>
@@ -30,12 +21,12 @@ export default function SupabaseChecklist({ projectRef }: Props) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/30">
+      <div className="rounded-md border border-success/30 bg-success/10 p-4">
         <div className="flex items-start gap-2">
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
           <div className="flex-1 text-sm">
-            <p className="font-semibold text-emerald-900 dark:text-emerald-100">Não precisa mudar nada se você usar o mesmo Supabase</p>
-            <ul className="mt-2 grid gap-1 text-emerald-800 dark:text-emerald-200">
+            <p className="font-semibold text-foreground">Não precisa mudar nada se você usar o mesmo Supabase</p>
+            <ul className="mt-2 grid gap-1 text-muted-foreground">
               <li>• Schema, RLS, triggers, functions, enums — já valem</li>
               <li>• Storage buckets — já existem</li>
               <li>• Edge functions — já deployadas pelo Lovable</li>
@@ -45,14 +36,14 @@ export default function SupabaseChecklist({ projectRef }: Props) {
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+      <div className="mt-4 rounded-md border border-warning/30 bg-warning/10 p-4">
         <div className="flex items-start gap-2">
-          <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+          <AlertCircle className="mt-0.5 size-4 shrink-0 text-warning" />
           <div className="flex-1 text-sm">
-            <p className="font-semibold text-amber-900 dark:text-amber-100">
-              Verifique APENAS se mudar o domínio público (ex: de <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs dark:bg-amber-900">*.lovable.app</code> para um próprio)
+            <p className="font-semibold text-foreground">
+              Verifique APENAS se mudar o domínio público (ex: de <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">*.lovable.app</code> para um próprio)
             </p>
-            <ul className="mt-3 grid gap-2 text-amber-900 dark:text-amber-100">
+            <ul className="mt-3 grid gap-2">
               <ChecklistLink href={`${base}/auth/url-configuration`} title="Site URL" subtitle="E-mails de reset/confirmação apontam pra cá" />
               <ChecklistLink href={`${base}/auth/url-configuration`} title="Redirect URLs" subtitle="Adicione a nova URL pra OAuth, magic link, password reset funcionarem" />
               <ChecklistLink href={`${base}/auth/providers`} title="OAuth callbacks (Google, GitHub, etc)" subtitle="Cada provider tem callback URL que precisa bater com a nova" />
@@ -62,9 +53,9 @@ export default function SupabaseChecklist({ projectRef }: Props) {
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-border bg-background p-4 text-sm">
-        <p className="mb-2 font-semibold">Regenerar <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">types.ts</code> (só se alterar schema no futuro)</p>
-        <pre className="overflow-x-auto rounded-lg bg-muted/50 p-3 text-xs">{`npx supabase gen types typescript --project-id ${projectRef} > src/integrations/supabase/types.ts`}</pre>
+      <div className="mt-4 rounded-md border border-border bg-input p-4 text-sm">
+        <p className="mb-2 font-semibold">Regenerar <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">types.ts</code> (só se alterar schema no futuro)</p>
+        <pre className="overflow-x-auto rounded-md bg-background/60 p-3 text-xs text-muted-foreground">{`npx supabase gen types typescript --project-id ${projectRef} > src/integrations/supabase/types.ts`}</pre>
       </div>
 
       <a
@@ -86,12 +77,12 @@ function ChecklistLink({ href, title, subtitle }: { href: string; title: string;
         href={href}
         target="_blank"
         rel="noreferrer"
-        className="group flex items-start gap-2 rounded-lg bg-amber-100/60 p-2.5 transition hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50"
+        className="group flex items-start gap-2 rounded-md border border-border bg-card p-2.5 transition hover:border-skip-glow"
       >
-        <ExternalLink className="mt-1 size-3.5 shrink-0 opacity-60 group-hover:opacity-100" />
+        <ExternalLink className="mt-1 size-3.5 shrink-0 text-muted-foreground group-hover:text-foreground" />
         <div className="flex-1">
-          <div className="font-semibold">{title}</div>
-          <div className="text-xs opacity-75">{subtitle}</div>
+          <div className="font-semibold text-foreground">{title}</div>
+          <div className="text-xs text-muted-foreground">{subtitle}</div>
         </div>
       </a>
     </li>

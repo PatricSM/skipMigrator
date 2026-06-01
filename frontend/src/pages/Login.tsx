@@ -29,10 +29,10 @@ export default function Login() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-gradient-subtle px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-elevated">
+    <div className="grid min-h-screen place-items-center px-4">
+      <div className="w-full max-w-sm rounded-lg border border-skip-glow bg-skip-glow p-8">
         <Link to="/" className="mb-6 inline-flex items-center gap-2 font-display text-lg font-bold">
-          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl shadow-card" />
+          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl" />
           Skip Migrator
         </Link>
         <h1 className="mb-1 font-display text-2xl font-bold">{mode === 'signin' ? 'Entrar' : 'Criar conta'}</h1>
@@ -47,7 +47,7 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border border-input bg-input px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="voce@email.com"
             />
           </div>
@@ -59,14 +59,14 @@ export default function Login() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border border-input bg-input px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Mínimo 8 caracteres"
             />
           </div>
           <button
             type="submit"
             disabled={busy}
-            className="w-full rounded-xl bg-primary px-4 py-2.5 font-semibold text-primary-foreground shadow-card transition hover:opacity-95 disabled:opacity-50"
+            className="w-full rounded-md bg-primary px-4 py-2.5 font-semibold text-primary-foreground shadow-glow transition hover:opacity-95 disabled:opacity-50"
           >
             {busy ? 'Aguarde…' : mode === 'signin' ? 'Entrar' : 'Criar conta'}
           </button>

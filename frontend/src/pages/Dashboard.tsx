@@ -6,10 +6,10 @@ import { listMigrations, downloadURL, type Migration } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 
 const STATUS_META: Record<Migration['Status'], { label: string; color: string; icon: React.ReactNode }> = {
-  queued:  { label: 'Na fila',      color: 'text-muted-foreground',     icon: <Clock className="size-4" /> },
-  running: { label: 'Processando',  color: 'text-primary',              icon: <Loader2 className="size-4 animate-spin" /> },
-  success: { label: 'Concluída',    color: 'text-emerald-600',          icon: <CircleCheck className="size-4" /> },
-  failed:  { label: 'Falhou',       color: 'text-destructive',          icon: <CircleAlert className="size-4" /> },
+  queued:  { label: 'Na fila',     color: 'text-muted-foreground', icon: <Clock className="size-4" /> },
+  running: { label: 'Processando', color: 'text-primary',          icon: <Loader2 className="size-4 animate-spin" /> },
+  success: { label: 'Concluída',   color: 'text-success',          icon: <CircleCheck className="size-4" /> },
+  failed:  { label: 'Falhou',      color: 'text-destructive',      icon: <CircleAlert className="size-4" /> },
 }
 
 export default function Dashboard() {
@@ -32,22 +32,22 @@ export default function Dashboard() {
   }, [refetch])
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen">
       <header className="container flex items-center justify-between py-6">
         <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl shadow-card" />
+          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl" />
           Skip Migrator
         </Link>
         <div className="flex items-center gap-3">
           <Link
             to="/app/new"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-card transition hover:opacity-95"
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
           >
             <Plus className="size-4" /> Nova migração
           </Link>
           <button
             onClick={async () => { await supabase.auth.signOut(); navigate('/') }}
-            className="rounded-full border border-border bg-card p-2.5 text-muted-foreground shadow-soft transition hover:text-foreground"
+            className="rounded-md border border-border bg-card p-2.5 text-muted-foreground transition hover:border-skip-glow hover:text-foreground"
             aria-label="Sair"
           >
             <LogOut className="size-4" />
@@ -58,11 +58,11 @@ export default function Dashboard() {
       <main className="container py-8">
         <h1 className="mb-6 font-display text-2xl font-bold">Suas migrações</h1>
         {rows.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center shadow-soft">
+          <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
             <p className="text-muted-foreground">Nenhuma migração por aqui ainda.</p>
             <Link
               to="/app/new"
-              className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-card transition hover:opacity-95"
+              className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
             >
               <Plus className="size-4" /> Iniciar primeira migração
             </Link>
@@ -70,7 +70,7 @@ export default function Dashboard() {
         ) : (
           <ul className="space-y-3">
             {rows.map((m) => (
-              <li key={m.ID} className="rounded-2xl border border-border bg-card p-5 shadow-soft transition hover:shadow-card">
+              <li key={m.ID} className="rounded-lg border border-border bg-card p-5 transition hover:border-skip-glow">
                 <div className="flex items-center justify-between gap-4">
                   <Link to={`/app/m/${m.ID}`} className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -88,7 +88,7 @@ export default function Dashboard() {
                   {m.Status === 'success' && m.OutputZipPath && (
                     <a
                       href={downloadURL(m.ID)}
-                      className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold shadow-soft transition hover:bg-accent"
+                      className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:border-skip-glow hover:bg-secondary"
                     >
                       <Download className="size-4" /> Baixar
                     </a>

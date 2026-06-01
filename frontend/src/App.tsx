@@ -18,7 +18,7 @@ export default function App() {
   }, [])
 
   if (session === undefined) {
-    return <div className="grid h-screen place-items-center bg-gradient-subtle text-muted-foreground">Carregando…</div>
+    return <div className="grid h-screen place-items-center text-muted-foreground">Carregando…</div>
   }
 
   return (
