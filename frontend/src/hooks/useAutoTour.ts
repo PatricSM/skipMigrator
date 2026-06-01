@@ -24,7 +24,6 @@ export function useAutoTour() {
   const fired = useRef<string | null>(null)
 
   useEffect(() => {
-    console.log('[useAutoTour] effect', { me, path: location.pathname, fired: fired.current })
     if (!me) return // not loaded yet or signed out
     const path = location.pathname
 
@@ -51,7 +50,6 @@ export function useAutoTour() {
       toRun = 'admin-users'
     }
 
-    console.log('[useAutoTour] decision', { toRun, via, stage: getNextStage(), path })
     if (!toRun) return
 
     const key = `${path}:${toRun}`

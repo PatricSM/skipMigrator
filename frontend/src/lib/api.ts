@@ -2,11 +2,24 @@ import { supabase } from './supabase'
 
 const API_BASE = import.meta.env.VITE_API_URL as string
 
+// Reads the access token straight out of localStorage. We bypass
+// supabase.auth.getSession() because that promise can stall under some
+// conditions (full-page nav + lock contention) and block every API call.
+function tokenFromStorage(): string {
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (!k.startsWith('sb-') || !k.endsWith('-auth-token')) continue
+      const raw = localStorage.getItem(k)
+      if (!raw) continue
+      const parsed = JSON.parse(raw)
+      if (parsed?.access_token) return parsed.access_token as string
+    }
+  } catch {}
+  return ''
+}
+
 async function authHeaders(): Promise<HeadersInit> {
-  const { data } = await supabase.auth.getSession()
-  return {
-    Authorization: `Bearer ${data.session?.access_token ?? ''}`,
-  }
+  return { Authorization: `Bearer ${tokenFromStorage()}` }
 }
 
 export interface Migration {
