@@ -22,6 +22,7 @@ export interface Migration {
   PixelPerfect: boolean
   Validate: boolean
   SupabaseStrategy: string
+  SupabaseProjectRef?: string | null
 }
 
 export async function createMigration(file: File, opts: { pixelPerfect: boolean; validate: boolean }) {

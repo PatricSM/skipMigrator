@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { ArrowLeft, Download, Loader2, CircleCheck, CircleAlert, Clock } from 'lucide-react'
 import { getMigration, downloadURL, type Migration } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
+import SupabaseChecklist from '@/components/SupabaseChecklist'
 
 const META: Record<Migration['Status'], { label: string; color: string; icon: React.ReactNode }> = {
   queued:  { label: 'Na fila — aguardando um worker',         color: 'text-muted-foreground', icon: <Clock className="size-5" /> },
@@ -75,6 +76,10 @@ export default function MigrationDetail() {
           <Row k="Estratégia Supabase" v={m.SupabaseStrategy === 'extract' ? 'extrair do source' : 'novo projeto'} />
           {m.ErrorMessage && <Row k="Erro" v={m.ErrorMessage} />}
         </div>
+
+        {m.Status === 'success' && m.SupabaseProjectRef && (
+          <SupabaseChecklist projectRef={m.SupabaseProjectRef} />
+        )}
 
         {m.BuildLog && (
           <details className="mt-6 rounded-2xl border border-border bg-card shadow-soft">

@@ -134,6 +134,13 @@ func (p *Pool) runJob(ctx context.Context, m db.Migration) {
 		return
 	}
 
+	// 3b. Persist Supabase project ref so the UI can render a tailored checklist.
+	if ref := migrator.ExtractSupabaseRef(outDir); ref != "" {
+		if dbErr := db.SetSupabaseProjectRef(ctx, p.db, m.ID, ref); dbErr != nil {
+			log.Printf("[migration %s] could not persist supabase ref: %v", m.ID, dbErr)
+		}
+	}
+
 	// 4. Zip output
 	outZip := fmt.Sprintf("%s/output.zip", work)
 	if err := migrator.ZipDir(outDir, outZip); err != nil {

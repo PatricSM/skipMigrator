@@ -49,18 +49,19 @@ const (
 
 // Migration mirrors the `migrations` row.
 type Migration struct {
-	ID             string
-	UserID         string
-	Status         string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	SourceZipPath  string
-	OutputZipPath  *string
-	BuildLog       *string
-	ErrorMessage   *string
-	PixelPerfect   bool
-	Validate       bool
-	SupabaseStrategy string
+	ID                  string
+	UserID              string
+	Status              string
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+	SourceZipPath       string
+	OutputZipPath       *string
+	BuildLog            *string
+	ErrorMessage        *string
+	PixelPerfect        bool
+	Validate            bool
+	SupabaseStrategy    string
+	SupabaseProjectRef  *string
 }
 
 // Insert creates a new migration row in `queued` status and returns the ID.
@@ -119,6 +120,16 @@ WHERE id = $4
 	return err
 }
 
+// SetSupabaseProjectRef stores the project ref extracted from the source ZIP
+// so the UI can render tailored post-migration checklists.
+func SetSupabaseProjectRef(ctx context.Context, pool *pgxpool.Pool, id, ref string) error {
+	if ref == "" {
+		return nil
+	}
+	_, err := pool.Exec(ctx, `UPDATE migrations SET supabase_project_ref = $1 WHERE id = $2`, ref, id)
+	return err
+}
+
 // MarkFailed records an error and the partial build log (if any).
 func MarkFailed(ctx context.Context, pool *pgxpool.Pool, id, errMsg, buildLog string) error {
 	_, err := pool.Exec(ctx, `
@@ -132,7 +143,7 @@ WHERE id = $4
 // GetByID fetches a single migration row.
 func GetByID(ctx context.Context, pool *pgxpool.Pool, id, userID string) (Migration, error) {
 	const q = `
-SELECT id::text, user_id::text, status, created_at, updated_at, source_zip_path, output_zip_path, build_log, error_message, pixel_perfect, validate, supabase_strategy
+SELECT id::text, user_id::text, status, created_at, updated_at, source_zip_path, output_zip_path, build_log, error_message, pixel_perfect, validate, supabase_strategy, supabase_project_ref
 FROM migrations
 WHERE id = $1 AND user_id = $2
 `
@@ -140,7 +151,7 @@ WHERE id = $1 AND user_id = $2
 	err := pool.QueryRow(ctx, q, id, userID).Scan(
 		&m.ID, &m.UserID, &m.Status, &m.CreatedAt, &m.UpdatedAt,
 		&m.SourceZipPath, &m.OutputZipPath, &m.BuildLog, &m.ErrorMessage,
-		&m.PixelPerfect, &m.Validate, &m.SupabaseStrategy,
+		&m.PixelPerfect, &m.Validate, &m.SupabaseStrategy, &m.SupabaseProjectRef,
 	)
 	return m, err
 }
@@ -148,7 +159,7 @@ WHERE id = $1 AND user_id = $2
 // ListByUser returns the user's migrations newest-first (up to limit).
 func ListByUser(ctx context.Context, pool *pgxpool.Pool, userID string, limit int) ([]Migration, error) {
 	const q = `
-SELECT id::text, user_id::text, status, created_at, updated_at, source_zip_path, output_zip_path, build_log, error_message, pixel_perfect, validate, supabase_strategy
+SELECT id::text, user_id::text, status, created_at, updated_at, source_zip_path, output_zip_path, build_log, error_message, pixel_perfect, validate, supabase_strategy, supabase_project_ref
 FROM migrations
 WHERE user_id = $1
 ORDER BY created_at DESC
