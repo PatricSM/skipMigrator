@@ -8,11 +8,15 @@ import { getMe, type Me } from '@/lib/api'
  */
 export function useMe(): Me | null | undefined {
   const [me, setMe] = useState<Me | null | undefined>(null)
+  console.log('[useMe] render', me)
 
   useEffect(() => {
+    console.log('[useMe] effect mount')
     let cancelled = false
     const load = async () => {
+      console.log('[useMe] load called')
       const { data } = await supabase.auth.getSession()
+      console.log('[useMe] session?', !!data.session)
       if (!data.session) {
         if (!cancelled) setMe(undefined)
         return
