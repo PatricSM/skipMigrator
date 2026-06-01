@@ -50,7 +50,17 @@ func authMiddleware(deps Deps) func(http.Handler) http.Handler {
 				return
 			}
 
+			// Super admin can come from either:
+			//   (a) email is in SUPER_ADMIN_EMAILS env (bootstrap)
+			//   (b) JWT carries app_metadata.role = "super_admin" (set via admin API)
 			isAdmin := email != "" && adminSet[strings.ToLower(email)]
+			if !isAdmin {
+				if appMeta, ok := claims["app_metadata"].(map[string]any); ok {
+					if role, _ := appMeta["role"].(string); role == "super_admin" {
+						isAdmin = true
+					}
+				}
+			}
 
 			ctx := context.WithValue(r.Context(), ctxUserID, sub)
 			ctx = context.WithValue(ctx, ctxEmail, email)

@@ -34,7 +34,7 @@ func NewRouter(deps Deps) http.Handler {
 
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"}, // tighten in production via env
-		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		ExposedHeaders:   []string{"Content-Length", "Content-Type"},
 		AllowCredentials: false,
@@ -60,6 +60,7 @@ func NewRouter(deps Deps) http.Handler {
 			r.Use(requireSuperAdmin)
 			r.Get("/admin/users", h.adminListUsers)
 			r.Post("/admin/users", h.adminCreateUser)
+			r.Patch("/admin/users/{id}/role", h.adminUpdateRole)
 			r.Delete("/admin/users/{id}", h.adminDeleteUser)
 		})
 	})

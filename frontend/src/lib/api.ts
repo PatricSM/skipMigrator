@@ -81,11 +81,14 @@ export async function getMe(): Promise<Me> {
   return (await r.json()) as Me
 }
 
+export type UserRole = 'user' | 'super_admin'
+
 export interface AdminUser {
   id: string
   email: string
   created_at: string
   last_sign_in_at?: string
+  role: UserRole
 }
 
 export async function adminListUsers(): Promise<AdminUser[]> {
@@ -95,15 +98,25 @@ export async function adminListUsers(): Promise<AdminUser[]> {
   return (await r.json()) as AdminUser[]
 }
 
-export async function adminCreateUser(email: string, password?: string) {
+export async function adminCreateUser(email: string, password: string | undefined, role: UserRole = 'user') {
   const headers = { ...(await authHeaders()), 'Content-Type': 'application/json' }
   const r = await fetch(`${API_BASE}/api/admin/users`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, role }),
   })
   if (!r.ok) throw new Error(await r.text())
   return (await r.json()) as { user: AdminUser; generated_password: string }
+}
+
+export async function adminUpdateRole(id: string, role: UserRole) {
+  const headers = { ...(await authHeaders()), 'Content-Type': 'application/json' }
+  const r = await fetch(`${API_BASE}/api/admin/users/${id}/role`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ role }),
+  })
+  if (!r.ok) throw new Error(await r.text())
 }
 
 export async function adminDeleteUser(id: string) {
