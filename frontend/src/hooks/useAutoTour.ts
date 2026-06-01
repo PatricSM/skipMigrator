@@ -30,12 +30,19 @@ export function useAutoTour() {
     // Decide which stage (if any) belongs to this route
     let toRun: 'dashboard' | 'new-migration' | 'admin-users' | 'finale' | null = null
 
+    const via = (() => { try { return sessionStorage.getItem('skipmigrator.tour.via') } catch { return null } })()
+
     if (path === '/app') {
+      // First-time login → start at the beginning
       if (!hasSeenTour() && getNextStage() === null) toRun = 'dashboard'
+      // Closing handoff from the new-migration stage when user is NOT admin
       else if (getNextStage() === 'finale') toRun = 'finale'
-    } else if (path === '/app/new' && getNextStage() === null) {
-      // arrives here only via the "Próximo →" of stage 1, which set via=dashboard-next
-      if (sessionStorage.getItem('skipmigrator.tour.via') === 'dashboard-next') {
+    } else if (path === '/app/new') {
+      // We only auto-start the new-migration stage when we arrived via the
+      // dashboard handoff. getNextStage() at this point already points to the
+      // stage AFTER new-migration ("admin-users" or "finale"), so we look at
+      // the `via` flag instead.
+      if (via === 'dashboard-next') {
         toRun = 'new-migration'
         sessionStorage.removeItem('skipmigrator.tour.via')
       }
