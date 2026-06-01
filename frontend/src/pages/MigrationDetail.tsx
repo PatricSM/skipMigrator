@@ -6,10 +6,10 @@ import { getMigration, downloadURL, type Migration } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 
 const META: Record<Migration['Status'], { label: string; color: string; icon: React.ReactNode }> = {
-  queued:  { label: 'Queued — waiting for a worker',   color: 'text-muted-foreground', icon: <Clock className="size-5" /> },
-  running: { label: 'Running — typically 30s to 3min', color: 'text-primary',          icon: <Loader2 className="size-5 animate-spin" /> },
-  success: { label: 'Success — your ZIP is ready',     color: 'text-emerald-400',      icon: <CircleCheck className="size-5" /> },
-  failed:  { label: 'Failed',                          color: 'text-destructive',      icon: <CircleAlert className="size-5" /> },
+  queued:  { label: 'Na fila — aguardando um worker',         color: 'text-muted-foreground', icon: <Clock className="size-5" /> },
+  running: { label: 'Processando — geralmente 30s a 3min',    color: 'text-primary',          icon: <Loader2 className="size-5 animate-spin" /> },
+  success: { label: 'Concluída — seu ZIP está pronto',        color: 'text-emerald-600',      icon: <CircleCheck className="size-5" /> },
+  failed:  { label: 'Falhou',                                  color: 'text-destructive',      icon: <CircleAlert className="size-5" /> },
 }
 
 export default function MigrationDetail() {
@@ -33,51 +33,54 @@ export default function MigrationDetail() {
     return () => { void supabase.removeChannel(ch) }
   }, [id, refetch])
 
-  if (!m) return <div className="grid h-screen place-items-center text-muted-foreground">Loading…</div>
+  if (!m) return <div className="grid h-screen place-items-center bg-gradient-subtle text-muted-foreground">Carregando…</div>
 
   const meta = META[m.Status]
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-subtle">
       <header className="container flex items-center justify-between py-6">
         <Link to="/app" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> Dashboard
+          <ArrowLeft className="size-4" /> Painel
         </Link>
-        <Link to="/" className="flex items-center gap-2 text-lg font-bold">
-          <Package className="size-5 text-primary" /> Skip Migrator
+        <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
+          <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card">
+            <Package className="size-5" />
+          </span>
+          Skip Migrator
         </Link>
       </header>
 
       <main className="container max-w-3xl py-8">
-        <div className={`mb-6 flex items-center gap-3 rounded-xl border border-border bg-card p-6 ${meta.color}`}>
+        <div className={`mb-6 flex items-center gap-4 rounded-2xl border border-border bg-card p-6 shadow-card ${meta.color}`}>
           {meta.icon}
           <div className="flex-1">
-            <h1 className="text-xl font-bold">{meta.label}</h1>
+            <h1 className="font-display text-xl font-bold">{meta.label}</h1>
             <p className="text-sm text-muted-foreground">
-              Migration <span className="font-mono">{m.ID.slice(0, 8)}</span> · {new Date(m.CreatedAt).toLocaleString()}
+              Migração <span className="font-mono">{m.ID.slice(0, 8)}</span> · {new Date(m.CreatedAt).toLocaleString('pt-BR')}
             </p>
           </div>
           {m.Status === 'success' && m.OutputZipPath && (
             <a
               href={downloadURL(m.ID)}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-card transition hover:opacity-95"
             >
-              <Download className="size-4" /> Download ZIP
+              <Download className="size-4" /> Baixar ZIP
             </a>
           )}
         </div>
 
-        <div className="grid gap-3 rounded-xl border border-border bg-card p-6 text-sm">
-          <Row k="Source ZIP"          v={m.SourceZipPath.split('/').pop() ?? ''} />
-          <Row k="Pixel-perfect"       v={m.PixelPerfect ? 'yes' : 'no'} />
-          <Row k="Build validated"     v={m.Validate ? 'yes' : 'no'} />
-          <Row k="Supabase strategy"   v={m.SupabaseStrategy} />
-          {m.ErrorMessage && <Row k="Error" v={m.ErrorMessage} />}
+        <div className="grid gap-3 rounded-2xl border border-border bg-card p-6 text-sm shadow-soft">
+          <Row k="ZIP de origem"      v={m.SourceZipPath.split('/').pop() ?? ''} />
+          <Row k="Pixel-perfect"      v={m.PixelPerfect ? 'sim' : 'não'} />
+          <Row k="Build validado"     v={m.Validate ? 'sim' : 'não'} />
+          <Row k="Estratégia Supabase" v={m.SupabaseStrategy === 'extract' ? 'extrair do source' : 'novo projeto'} />
+          {m.ErrorMessage && <Row k="Erro" v={m.ErrorMessage} />}
         </div>
 
         {m.BuildLog && (
-          <details className="mt-6 rounded-xl border border-border bg-card">
-            <summary className="cursor-pointer p-4 text-sm font-medium">Build log</summary>
+          <details className="mt-6 rounded-2xl border border-border bg-card shadow-soft">
+            <summary className="cursor-pointer p-4 text-sm font-semibold">Log do build</summary>
             <pre className="max-h-[480px] overflow-auto p-4 pt-0 text-xs text-muted-foreground">{m.BuildLog}</pre>
           </details>
         )}
@@ -90,7 +93,7 @@ function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex justify-between gap-4">
       <span className="text-muted-foreground">{k}</span>
-      <span className="font-medium text-right break-all">{v}</span>
+      <span className="break-all text-right font-medium">{v}</span>
     </div>
   )
 }
