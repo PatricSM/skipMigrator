@@ -19,8 +19,10 @@ export function useMe(): Me | null | undefined {
       }
       try {
         const m = await getMe()
+        console.log('[useMe] got', m)
         if (!cancelled) setMe(m)
-      } catch {
+      } catch (e) {
+        console.log('[useMe] err', e)
         if (!cancelled) setMe(undefined)
       }
     }
