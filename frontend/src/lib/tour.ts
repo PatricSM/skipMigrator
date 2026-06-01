@@ -2,13 +2,22 @@ import { driver, type Driver } from 'driver.js'
 import 'driver.js/dist/driver.css'
 
 /**
- * Guided onboarding tour using driver.js, split into 3 stages — one per route.
- *
- * Transitions between stages happen via a sessionStorage flag + full-page nav
+ * Guided onboarding tour using driver.js, split into 3+1 stages — one per
+ * route. Stage handoffs happen via a sessionStorage flag + full-page nav
  * (window.location.href). useAutoTour reads the flag on each route mount and
- * starts the matching stage. This avoids the driver.js × React Router
- * impedance mismatch (driver runs DOM-imperatively, navigate() needs the React
- * context to be live).
+ * starts the matching stage.
+ *
+ * Why full-page nav instead of react-router navigate(): driver.js is
+ * DOM-imperative, fires from outside React, and our callbacks need to do a
+ * route change. Calling navigate() from there is racy. window.location.href is
+ * synchronous and reliable, at the cost of a reload (~50ms).
+ *
+ * Why use onDestroyStarted (not onNextClick): the last step of each stage
+ * shows the "Concluir" button (default driver.js behavior for the final step),
+ * which does NOT fire onNextClick. onDestroyStarted fires on every termination
+ * (Concluir OR ×). We disambiguate by checking opts.state.activeIndex against
+ * the configured "advance index" — if the user reached that step before
+ * dismissing, we navigate to the next stage; otherwise we mark the tour done.
  */
 
 const COMPLETED_KEY = 'skipmigrator.tour.completed'
@@ -22,10 +31,12 @@ export function hasSeenTour(): boolean {
 export function markTourSeen() {
   try { localStorage.setItem(COMPLETED_KEY, '1') } catch {}
   try { sessionStorage.removeItem(STAGE_KEY) } catch {}
+  try { sessionStorage.removeItem('skipmigrator.tour.via') } catch {}
 }
 export function resetTour() {
   try { localStorage.removeItem(COMPLETED_KEY) } catch {}
   try { sessionStorage.removeItem(STAGE_KEY) } catch {}
+  try { sessionStorage.removeItem('skipmigrator.tour.via') } catch {}
 }
 export function getNextStage(): TourStage | null {
   try {
@@ -40,8 +51,21 @@ function setNextStage(s: TourStage | null) {
   } catch {}
 }
 
-// Common driver factory: applies our dark+indigo theme to every stage.
-function makeDriver(steps: Parameters<typeof driver>[0]['steps'], onDestroyed?: () => void): Driver {
+interface StageHandoff {
+  /** 0-based index of the step that, when reached, signals "advance to next stage on close". */
+  advanceFromStep: number
+  /** Where to navigate when the user clicks Concluir on the advance step. */
+  nextPath: string
+  /** What to set in sessionStorage so the next page knows which stage to start. */
+  nextStage: TourStage | null
+  /** Optional flag set in via so the next page knows the previous step closed forward. */
+  viaFlag?: string
+}
+
+function makeStagedDriver(
+  steps: Parameters<typeof driver>[0]['steps'],
+  handoff: StageHandoff,
+): Driver {
   return driver({
     showProgress: true,
     allowClose: true,
@@ -49,26 +73,34 @@ function makeDriver(steps: Parameters<typeof driver>[0]['steps'], onDestroyed?: 
     popoverClass: 'skip-tour',
     nextBtnText: 'Próximo →',
     prevBtnText: '← Voltar',
-    doneBtnText: 'Concluir',
+    doneBtnText: 'Continuar →',
     progressText: '{{current}} de {{total}}',
-    onDestroyed,
+    onDestroyStarted: (_el, _step, opts) => {
+      const idx = opts.state.activeIndex ?? -1
+      const reachedAdvance = idx >= handoff.advanceFromStep
+      if (reachedAdvance) {
+        if (handoff.viaFlag) sessionStorage.setItem('skipmigrator.tour.via', handoff.viaFlag)
+        setNextStage(handoff.nextStage)
+        // Defer to next tick so destroy() can finish cleanly before navigation.
+        setTimeout(() => { window.location.href = handoff.nextPath }, 50)
+      } else {
+        // User dismissed before completing the stage — mark done so we don't re-prompt.
+        markTourSeen()
+      }
+      opts.driver.destroy()
+    },
     steps,
   })
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Stage 1: Dashboard (/app)
-// Welcome → nova-migração button. Last step navigates to /app/new.
-// ──────────────────────────────────────────────────────────────────────────
+// ── Stage 1: Dashboard (/app) ────────────────────────────────────────────
 export function startDashboardTour(opts: { includeAdmin: boolean }): Driver {
-  let advancedToNext = false
-
   const steps: Parameters<typeof driver>[0]['steps'] = [
     {
       popover: {
         title: '👋 Bem-vindo ao Skip Migrator',
         description:
-          'Em ~1 minuto te mostro como migrar um projeto Lovable para a stack Skip. Pode pular a qualquer momento clicando no X.',
+          'Em ~1 minuto te mostro como migrar um projeto Lovable para a stack Skip. Pode fechar (×) a qualquer momento.',
       },
     },
     {
@@ -82,32 +114,26 @@ export function startDashboardTour(opts: { includeAdmin: boolean }): Driver {
     {
       element: '[data-tour="new-migration-btn"]',
       popover: {
-        title: '➕ Nova migração',
-        description: 'Tudo começa por aqui. Click em <strong>Próximo →</strong> e te levo pra tela de upload.',
+        title: '➕ Tudo começa aqui',
+        description:
+          'Click em <strong>Continuar →</strong> e te levo pra tela de upload pra ver as opções da migração.',
         side: 'bottom' as const,
         align: 'end' as const,
       },
-      onNextClick: (_el, _step, popoverOpts) => {
-        advancedToNext = true
-        setNextStage(opts.includeAdmin ? 'admin-users' : 'finale')
-        // chain a /app/new visit first — that page has its own stage tour
-        sessionStorage.setItem('skipmigrator.tour.via', 'dashboard-next')
-        popoverOpts.driver.destroy()
-        setTimeout(() => { window.location.href = '/app/new' }, 50)
-      },
     },
   ]
-  return makeDriver(steps, () => {
-    if (!advancedToNext) markTourSeen() // user closed mid-stage
-  }).drive() as unknown as Driver
+  const d = makeStagedDriver(steps, {
+    advanceFromStep: 2,
+    nextPath: '/app/new',
+    nextStage: opts.includeAdmin ? 'admin-users' : 'finale',
+    viaFlag: 'dashboard-next',
+  })
+  d.drive()
+  return d
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Stage 2: New migration form (/app/new)
-// Walks through the 3 form sections, ends by going to /app (or /admin/users).
-// ──────────────────────────────────────────────────────────────────────────
+// ── Stage 2: New migration form (/app/new) ───────────────────────────────
 export function startNewMigrationTour(opts: { includeAdmin: boolean }): Driver {
-  let advancedToNext = false
   const steps: Parameters<typeof driver>[0]['steps'] = [
     {
       element: '[data-tour="upload-zone"]',
@@ -140,28 +166,22 @@ export function startNewMigrationTour(opts: { includeAdmin: boolean }): Driver {
       element: '[data-tour="submit-btn"]',
       popover: {
         title: '4️⃣ Iniciar',
-        description: 'Click aqui (ou no botão <strong>Próximo →</strong>) pra terminar o tour e voltar ao painel.',
+        description: 'Esse botão dispara a migração. Click <strong>Continuar →</strong> pra seguir o tour.',
         side: 'top' as const,
-      },
-      onNextClick: (_el, _step, popoverOpts) => {
-        advancedToNext = true
-        setNextStage(opts.includeAdmin ? 'admin-users' : 'finale')
-        popoverOpts.driver.destroy()
-        const target = opts.includeAdmin ? '/admin/users' : '/app'
-        setTimeout(() => { window.location.href = target }, 50)
       },
     },
   ]
-  return makeDriver(steps, () => {
-    if (!advancedToNext) markTourSeen()
-  }).drive() as unknown as Driver
+  const d = makeStagedDriver(steps, {
+    advanceFromStep: 3,
+    nextPath: opts.includeAdmin ? '/admin/users' : '/app',
+    nextStage: opts.includeAdmin ? 'admin-users' : 'finale',
+  })
+  d.drive()
+  return d
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Stage 3 (super admin only): Admin → /admin/users
-// ──────────────────────────────────────────────────────────────────────────
+// ── Stage 3 (super admin only): /admin/users ─────────────────────────────
 export function startAdminTour(): Driver {
-  let advancedToNext = false
   const steps: Parameters<typeof driver>[0]['steps'] = [
     {
       element: '[data-tour="create-user-form"]',
@@ -171,38 +191,46 @@ export function startAdminTour(): Driver {
           'Como super admin, você cria contas pra outros usuários aqui. A senha é opcional — se deixar vazio, geramos uma forte e mostramos <strong>uma vez</strong> pra você copiar e enviar pelo seu canal seguro.',
         side: 'bottom' as const,
       },
-      onNextClick: (_el, _step, popoverOpts) => {
-        advancedToNext = true
-        setNextStage('finale')
-        popoverOpts.driver.destroy()
-        setTimeout(() => { window.location.href = '/app' }, 50)
-      },
     },
   ]
-  return makeDriver(steps, () => {
-    if (!advancedToNext) markTourSeen()
-  }).drive() as unknown as Driver
+  const d = makeStagedDriver(steps, {
+    advanceFromStep: 0,
+    nextPath: '/app',
+    nextStage: 'finale',
+  })
+  d.drive()
+  return d
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Final farewell back on /app
-// ──────────────────────────────────────────────────────────────────────────
+// ── Finale on /app ───────────────────────────────────────────────────────
 export function startFinaleTour(): Driver {
-  const steps: Parameters<typeof driver>[0]['steps'] = [
-    {
-      popover: {
-        title: '🎉 Pronto!',
-        description:
-          'Você pode rever este tour a qualquer momento clicando no ícone <strong>?</strong> no header. Boa migração!',
-      },
+  const d = driver({
+    showProgress: false,
+    allowClose: true,
+    overlayColor: 'rgba(0, 0, 0, 0.75)',
+    popoverClass: 'skip-tour',
+    doneBtnText: 'Boa migração!',
+    onDestroyStarted: (_el, _step, opts) => {
+      markTourSeen()
+      opts.driver.destroy()
     },
-  ]
-  return makeDriver(steps, () => markTourSeen()).drive() as unknown as Driver
+    steps: [
+      {
+        popover: {
+          title: '🎉 Pronto!',
+          description:
+            'Você pode rever este tour a qualquer momento clicando no ícone <strong>?</strong> no header.',
+        },
+      },
+    ],
+  })
+  d.drive()
+  return d
 }
 
 /**
  * Entry-point used by both auto-start (first login) and the "Refazer tour"
- * button. Always resets stage + completion flag and starts at Stage 1.
+ * button. Resets stage + completion flag and starts at Stage 1.
  */
 export function startTourFromBeginning(opts: { includeAdmin: boolean }): Driver {
   resetTour()
