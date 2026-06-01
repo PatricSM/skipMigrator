@@ -3,7 +3,7 @@
 # Stage 2: runtime image with Node.js 22 + pnpm so the worker can run `pnpm install/build`
 #          on user-uploaded projects.
 
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 WORKDIR /src
 
 # Copy the migrator module first (it's a local replace target)
