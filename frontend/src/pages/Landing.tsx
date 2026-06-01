@@ -1,14 +1,12 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Package, Zap, ShieldCheck, GitBranch, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, Zap, ShieldCheck, GitBranch, CheckCircle2 } from 'lucide-react'
 
 export default function Landing({ authed }: { authed: boolean }) {
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <header className="container flex items-center justify-between py-6">
         <div className="flex items-center gap-2 font-display text-xl font-bold text-foreground">
-          <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card">
-            <Package className="size-5" />
-          </span>
+          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl shadow-card" />
           Skip Migrator
         </div>
         <nav className="flex items-center gap-6 text-sm">

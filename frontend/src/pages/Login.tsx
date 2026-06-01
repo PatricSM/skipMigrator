@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Package } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export default function Login() {
@@ -33,9 +32,7 @@ export default function Login() {
     <div className="grid min-h-screen place-items-center bg-gradient-subtle px-4">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-elevated">
         <Link to="/" className="mb-6 inline-flex items-center gap-2 font-display text-lg font-bold">
-          <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card">
-            <Package className="size-5" />
-          </span>
+          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl shadow-card" />
           Skip Migrator
         </Link>
         <h1 className="mb-1 font-display text-2xl font-bold">{mode === 'signin' ? 'Entrar' : 'Criar conta'}</h1>

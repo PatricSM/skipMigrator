@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ArrowLeft, Upload, Package, Loader2 } from 'lucide-react'
+import { ArrowLeft, Upload, Loader2 } from 'lucide-react'
 import { createMigration } from '@/lib/api'
 
 export default function NewMigration() {
@@ -36,9 +36,7 @@ export default function NewMigration() {
           <ArrowLeft className="size-4" /> Voltar para o painel
         </Link>
         <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-          <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card">
-            <Package className="size-5" />
-          </span>
+          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl shadow-card" />
           Skip Migrator
         </Link>
       </header>

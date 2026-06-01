@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { Package, Plus, LogOut, CircleCheck, CircleAlert, Loader2, Clock, Download } from 'lucide-react'
+import { Plus, LogOut, CircleCheck, CircleAlert, Loader2, Clock, Download } from 'lucide-react'
 import { listMigrations, downloadURL, type Migration } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 
@@ -35,9 +35,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-subtle">
       <header className="container flex items-center justify-between py-6">
         <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-          <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card">
-            <Package className="size-5" />
-          </span>
+          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl shadow-card" />
           Skip Migrator
         </Link>
         <div className="flex items-center gap-3">

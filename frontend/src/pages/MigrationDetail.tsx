@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { ArrowLeft, Package, Download, Loader2, CircleCheck, CircleAlert, Clock } from 'lucide-react'
+import { ArrowLeft, Download, Loader2, CircleCheck, CircleAlert, Clock } from 'lucide-react'
 import { getMigration, downloadURL, type Migration } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 
@@ -44,9 +44,7 @@ export default function MigrationDetail() {
           <ArrowLeft className="size-4" /> Painel
         </Link>
         <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-          <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card">
-            <Package className="size-5" />
-          </span>
+          <img src="/logoskip.png" alt="Skip" className="size-10 rounded-xl shadow-card" />
           Skip Migrator
         </Link>
       </header>
