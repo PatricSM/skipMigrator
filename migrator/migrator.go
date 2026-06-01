@@ -42,6 +42,9 @@ type PhaseLog struct {
 	Status   string // "ok" | "skipped" | "warn" | "error"
 	Message  string
 	Duration string
+	// Details holds optional per-item lines (e.g. file-by-file transform breakdown)
+	// that the report renders under the phase.
+	Details []string
 }
 
 // Run executes all 11 phases of the Lovable → Skip migration.
@@ -100,8 +103,22 @@ func Run(opts Options) (*Result, error) {
 		result.BuildLog = buildOut
 		opts.LogFn("[%s] %s — %s", log.Phase, log.Status, log.Message)
 		if err != nil {
+			writeReport(opts, result, err)
 			return result, fmt.Errorf("%s failed: %w", log.Phase, err)
 		}
+
+		// Runtime smoke test layered on top of the build check.
+		smokeLog, smokeErr := phase12Smoke(opts)
+		result.PhaseLogs = append(result.PhaseLogs, smokeLog)
+		opts.LogFn("[%s] %s — %s", smokeLog.Phase, smokeLog.Status, smokeLog.Message)
+		if smokeErr != nil {
+			writeReport(opts, result, smokeErr)
+			return result, fmt.Errorf("%s failed: %w", smokeLog.Phase, smokeErr)
+		}
+	}
+
+	if err := writeReport(opts, result, nil); err != nil {
+		opts.LogFn("[report] warn — could not write MIGRATION_REPORT.md: %v", err)
 	}
 
 	return result, nil

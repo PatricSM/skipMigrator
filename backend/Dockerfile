@@ -24,7 +24,9 @@ RUN cd /src/migrator && CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags='-s
 
 # ---------------------------------------------------------------------------
 FROM node:22-alpine AS runtime
-RUN apk add --no-cache git ca-certificates tzdata \
+# Chromium + nss are required by the phase-12 runtime smoke test
+# (rod uses headless Chromium to load `/` and capture console errors).
+RUN apk add --no-cache git ca-certificates tzdata chromium nss freetype ttf-freefont \
  && corepack enable \
  && corepack prepare pnpm@10.12.3 --activate
 
@@ -33,5 +35,6 @@ COPY --from=builder /out/server      /usr/local/bin/server
 COPY --from=builder /out/migrate-cli /usr/local/bin/migrate-cli
 
 ENV PORT=8000
+ENV ROD_CHROMIUM_BIN=/usr/bin/chromium-browser
 EXPOSE 8000
 ENTRYPOINT ["/usr/local/bin/server"]
